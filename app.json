@@ -22,6 +22,9 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
+      "expo":{
+         "bundler": "metro",
+      },
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
