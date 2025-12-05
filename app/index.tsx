@@ -20,7 +20,7 @@ export default function Index() {
 
         {/* Title */}
         <Text className="text-3xl font-extrabold text-sky-500 text-center">
-          Welcome to ChatApp
+          Welcome to PingMe
         </Text>
 
         {/* Subtitle */}
