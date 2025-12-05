@@ -30,7 +30,7 @@ export default function LoginScreen() {
 
                 {/* Description */}
                 <Text className="text-gray-600 text-center mb-8 leading-relaxed">
-                    ChatApp will send an SMS to verify your number.
+                    PingMe will send an SMS to verify your number.
                 </Text>
 
                 {/* Phone Input Box */}
