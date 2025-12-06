@@ -8,7 +8,7 @@ export default function LoginScreen() {
 
     //validation can be added here
     const isValidNumber = /^\+\d{1,3}\s?\d{9}$/.test(phoneNumber);
-
+    console.log("Phone Number Valid:", isValidNumber,phoneNumber);
     const handleNext = () => {
         if (!isValidNumber) {
             Alert.alert("Invalid Phone Number", "Please enter a valid phone number including country code.");
