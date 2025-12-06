@@ -1,11 +1,34 @@
-import { View, Text, Image, TouchableOpacity } from "react-native";
+import { View, Text, Image, TouchableOpacity, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import "../global.css";
 import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { getUser } from "@/util/storage";
 
 export default function Index() {
   const router = useRouter();
+  const [loading,setLoading]= useState(false)
+  const  redirectUser= async ()=>{
+    try {
+      setLoading(true)
+      const user = await getUser();
+      if(user !== null && user !== undefined){
+        router.push("/chatList");
+      }
+      
+    } catch (error) {
+      console.error(error);
+    }
+    finally {
+      setLoading(false)
+    }
+  }
 
+  useEffect(() => {
+    redirectUser();
+  }, []);
+
+  if (loading) return loading && <ActivityIndicator size="large" color="#00ff00" animating={loading} className="flex-1 justify-center" />;
   return (
     <SafeAreaView className="flex-1 bg-black">
       <View className="flex-1 items-center justify-center px-8 bg-sky-50">
