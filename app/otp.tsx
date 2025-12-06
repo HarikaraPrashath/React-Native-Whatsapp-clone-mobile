@@ -14,63 +14,41 @@ export default function OTPScreen() {
 
   const isOTPComplete = OTP.length === 6;
   const canResend = timer === 0;
-
-  // Normalize phone number from route params (string | string[] | undefined)
-  const displayPhone =
-    typeof phoneNumber === "string"
-      ? phoneNumber
-      : Array.isArray(phoneNumber)
-      ? phoneNumber[0]
-      : "";
-
-  // Generate a random 6-digit OTP
-  const generateOTP = () => {
+  const generateRandomOTP = () => {
     const randomOTP = Math.floor(100000 + Math.random() * 900000).toString();
     setGeneratedOTP(randomOTP);
-    console.log("Generated OTP:", randomOTP); // Debugging purpose
-  };
+    console.log("Generated OTP", randomOTP); //Debug
+  }
 
-  // On mount → generate OTP and start countdown timer
-  useEffect(() => {
-    generateOTP();
-
-    const interval = setInterval(() => {
-      setTimer(prev => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-
-    // Cleanup interval on unmount
-    return () => clearInterval(interval);
-  }, []);
-
-  const resendOTP = () => {
-    if (!canResend) return;
-    setOTP("");
-    setError("");
-    generateOTP();
+  const resendOtp = () => {
+    generateRandomOTP();
     setTimer(30);
-  };
+  }
 
-  // Verify OTP handler
-  const handleVerifyOTP = () => {
+  // Verify OTP
+  const handleVerify = () => {
     setError("");
-
     if (OTP.length !== 6) {
-      setError("Please enter a 6-digit OTP.");
+      // Set Error
+      setError("OTP must be 6 digits.")
       return;
     }
 
     if (OTP !== generatedOTP) {
-      setError("Invalid OTP. Please try again.");
+      setError("Incorrect OTP. Please try again.");
       return;
     }
 
-    // SUCCESS: proceed to next step
-    router.push({
-      pathname: "/account-setup",
-      params: { phoneNumber: displayPhone },
-    });
-  };
+    // Success
+    router.push({ pathname: "/account-setup", params: { phoneNumber } })
+  }
 
+  // Generate OTP & Start Timer on Screen Load
+  useEffect(() => {
+    generateRandomOTP();
+    const intervel = setInterval(() => setTimer((prev) => prev > 0 ? prev - 1 : 0), 1000);
+    return () => clearInterval(intervel)
+  }, [])
   return (
     <SafeAreaView className="flex-1 bg-sky-50">
       <View className="flex-1 px-6 pt-10 pb-6 justify-center">
@@ -82,7 +60,7 @@ export default function OTPScreen() {
         {/* Description */}
         <Text className="text-gray-600 text-center mb-4 leading-relaxed">
           We&apos;ve sent a 6-digit verification code to{" "}
-          <Text className="font-semibold text-sky-600">{displayPhone}</Text>.
+          <Text className="font-semibold text-sky-600">{phoneNumber}</Text>.
         </Text>
 
         {/* Debug OTP (for development / testing) */}
@@ -116,12 +94,11 @@ export default function OTPScreen() {
 
         {/* Verify Button */}
         <TouchableOpacity
-          className={`rounded-full py-3 items-center shadow-md shadow-sky-200 ${
-            isOTPComplete ? "bg-sky-500" : "bg-gray-400"
-          }`}
+          className={`rounded-full py-3 items-center shadow-md shadow-sky-200 ${isOTPComplete ? "bg-sky-500" : "bg-gray-400"
+            }`}
           activeOpacity={0.8}
           disabled={!isOTPComplete}
-          onPress={handleVerifyOTP}
+          onPress={handleVerify}
         >
           <Text className="text-white text-lg font-semibold">Verify OTP</Text>
         </TouchableOpacity>
@@ -138,11 +115,10 @@ export default function OTPScreen() {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={resendOTP} disabled={!canResend}>
+          <TouchableOpacity onPress={resendOtp} disabled={!canResend}>
             <Text
-              className={`text-sm font-medium ${
-                canResend ? "text-sky-600" : "text-gray-400"
-              }`}
+              className={`text-sm font-medium ${canResend ? "text-sky-600" : "text-gray-400"
+                }`}
             >
               {canResend ? "Resend OTP" : `Resend in ${timer}s`}
             </Text>
