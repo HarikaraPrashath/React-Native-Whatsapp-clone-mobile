@@ -1,20 +1,30 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, TouchableOpacity, Image, TextInput } from "react-native";
+import { View, Text, TouchableOpacity, Image, TextInput, Alert, ActivityIndicator, BackHandler } from "react-native";
 import { useEffect, useState } from "react";
 import Constants from "expo-constants";
 import axios from "axios";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 const API_URL = Constants.expoConfig?.extra?.API_URL || "http://192.168.8.181:5000/api";
 
 export default function SetupScreen() {
   const [name, setName] = useState("");
+  const [id, setId] = useState("");
+  const [profileImage, setProfileImage] = useState("");
   const { phoneNumber } = useLocalSearchParams();
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const fetchUser = async () => {
     try {
       const response = await axios.get(`${API_URL}/users/${phoneNumber}`);
       if (response.data) {
         setName(response.data.name || "");
+        setId(response.data._id || "");
+        setProfileImage(response.data.profileImage || "");
+
         console.log("Fetched user data:", response.data);
         console.log("User name:", response.data.name);
       }
@@ -23,12 +33,91 @@ export default function SetupScreen() {
     }
   }
 
+  const picImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    })
+
+    if (!result.canceled) {
+      setProfileImage(result.assets[0].uri);
+    }
+  }
+
+  //Save or Update user Profile
+  const saveProfile = async () => {
+    if (!name.trim()) {
+      alert("Name cannot be empty.");
+      return;
+    }
+    try {
+      const formData = new FormData();
+      formData.append("phone", phoneNumber as string);
+      formData.append("name", name);
+
+      setLoading(true);
+      if (profileImage && profileImage.startsWith("file://")) {
+        formData.append("profileImage", {
+          uri: profileImage,
+          name: "profile.jpg",
+          type: "image/jpeg"
+        } as any);
+      }
+      let response;
+
+      if (id) {
+        response = await axios.put(`${API_URL}/users/${id}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+
+        });
+      }
+      else {
+        response = await axios.post(`${API_URL}/users/`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+
+        });
+      }
+
+      if (response.data) {
+        //Success
+        await AsyncStorage.setItem("user", JSON.stringify(response.data));
+        router.push("/chatList");
+        console.log("Profile saved:", response.data);
+
+      }
+
+      else {
+        Alert.alert("Error", "Failed to save User information. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error saving profile:", error);
+    }
+    finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     fetchUser()
+    const handleBackPress = () => {
+      router.replace('/');
+      return true; // Prevent default behavior (exit app)
+    }
+    //Listen back button press to exit app
+    BackHandler.addEventListener('hardwareBackPress', handleBackPress);
   }, []);
+
+  if (loading) return loading && <ActivityIndicator size="large" color="#00ff00" animating={loading} className="flex-1 justify-center" />;
+
   return (
-    <SafeAreaView className="flex-1 bg-sky-50 px-6">
-      <View className="flex-1 pt-12 pb-6">
+    <SafeAreaView className="flex-1   bg-black">
+      <View className="flex-1 pt-12 pb-6 px-6 bg-sky-50">
 
         {/* Heading */}
         <Text className="text-3xl font-extrabold text-sky-600 text-center mb-2">
@@ -47,28 +136,20 @@ export default function SetupScreen() {
             <TouchableOpacity
               className="w-28 h-28 rounded-full bg-sky-50 border border-sky-200 items-center justify-center overflow-hidden"
               activeOpacity={0.8}
-              onPress={() => {
-                // TODO: open image picker
-              }}
+              onPress={picImage}
             >
-              <Image
-                source={require("../assets/images/profile-placeholder.png")}
+              {profileImage ? <Image
+                source={{ uri: profileImage }}
                 className="w-28 h-28"
                 resizeMode="cover"
-              />
+              /> :
+                <View className="w--32 h-32 rounded-full justify-center items-center  border-gray-500 ">
+                  <Text className="text-xl text-sky-300">Add image</Text>
+                </View>
+              }
             </TouchableOpacity>
 
-            <TouchableOpacity
-              className="mt-3"
-              activeOpacity={0.7}
-              onPress={() => {
-                // TODO: open image picker
-              }}
-            >
-              <Text className="text-sm font-medium text-sky-600">
-                Upload Photo
-              </Text>
-            </TouchableOpacity>
+
           </View>
 
           {/* Name Input */}
@@ -90,9 +171,7 @@ export default function SetupScreen() {
         <TouchableOpacity
           className="mt-8 w-full rounded-full bg-sky-500 py-3 items-center shadow-md shadow-sky-200"
           activeOpacity={0.85}
-          onPress={() => {
-            // TODO: handle complete setup
-          }}
+          onPress={saveProfile}
         >
           <Text className="text-white text-lg font-semibold">
             Complete Setup
