@@ -5,7 +5,8 @@ import Constants from "expo-constants";
 import axios from "axios";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createUser, fetchUser, updateUser } from "@/util/app";
+import { saveUser } from "@/util/storage";
 
 const API_URL = Constants.expoConfig?.extra?.API_URL || "http://192.168.8.181:5000/api";
 
@@ -17,16 +18,16 @@ export default function SetupScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const fetchUser = async () => {
+  const loadUser = async () => {
     try {
-      const response = await axios.get(`${API_URL}/users/${phoneNumber}`);
-      if (response.data) {
-        setName(response.data.name || "");
-        setId(response.data._id || "");
-        setProfileImage(response.data.profileImage || "");
+      const data = await fetchUser(phoneNumber)
+      if (data) {
+        setName(data.name || "");
+        setId(data._id || "");
+        setProfileImage(data.profileImage || "");
 
-        console.log("Fetched user data:", response.data);
-        console.log("User name:", response.data.name);
+        console.log("Fetched user data:", data);
+        console.log("User name:", data.name);
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -65,28 +66,20 @@ export default function SetupScreen() {
           type: "image/jpeg"
         } as any);
       }
-      let response;
+      setLoading(true)
+      let response
 
       if (id) {
-        response = await axios.put(`${API_URL}/users/${id}`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-
-        });
+       response = await updateUser(id,formData)
       }
       else {
-        response = await axios.post(`${API_URL}/users/`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+       response = await createUser(formData)
 
-        });
       }
 
-      if (response.data) {
+      if (response) {
         //Success
-        await AsyncStorage.setItem("user", JSON.stringify(response.data));
+        await saveUser(response)
         router.push("/chatList");
         console.log("Profile saved:", response.data);
 
@@ -104,7 +97,7 @@ export default function SetupScreen() {
   }
 
   useEffect(() => {
-    fetchUser()
+    loadUser()
     const handleBackPress = () => {
       router.replace('/');
       return true; // Prevent default behavior (exit app)
