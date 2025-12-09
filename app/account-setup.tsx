@@ -80,7 +80,7 @@ export default function SetupScreen() {
       if (response) {
         //Success
         await saveUser(response)
-        router.push("/chatList");
+        router.push("/Chats");
         console.log("Profile saved:", response.data);
 
       }
