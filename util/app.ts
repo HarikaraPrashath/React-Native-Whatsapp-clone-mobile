@@ -40,3 +40,12 @@ export const createUser = async (formData) => {
         console.log("Save user failed",error)
     }
 }
+
+export const fetchChats = async (userId) => {
+    try {
+        const response = await axios.get(`${API_URL}/conversation/${userId}`);
+        return response.data
+    } catch (error) {
+        console.error("Error fetching user data:", error);
+    }
+}
