@@ -13,7 +13,7 @@ export default function Index() {
       setLoading(true)
       const user = await getUser();
       if(user !== null && user !== undefined){
-        router.push("/chatList");
+        router.push("/(tabs)/Chats");
       }
       
     } catch (error) {
