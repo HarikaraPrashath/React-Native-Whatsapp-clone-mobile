@@ -17,9 +17,11 @@ import {
     FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useChatStore } from "@/store/chatStore";
 
 export default function ChatListScreen() {
-    const [chats, setChats] = useState<any[]>([]);
+    const setChats = useChatStore(state =>state.setChats)
+    const chats = useChatStore(state =>state.chats)
     const [user, setUser] = useState<any | null>(null);
     const router = useRouter();
 
@@ -58,7 +60,7 @@ export default function ChatListScreen() {
     }, [user]);
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
             <Header />
             <View className="flex-1 bg-sky-100">
                 <ChatList data={chats} user={user} />
@@ -92,7 +94,7 @@ export default function ChatListScreen() {
                         </TouchableOpacity>
 
                         <TouchableOpacity>
-                            <Feather size={22} name="more-vertical" />
+                            <Feather size={22} name="more-vertical" onPress={logout}/>
                         </TouchableOpacity>
                     </View>
                 </View>

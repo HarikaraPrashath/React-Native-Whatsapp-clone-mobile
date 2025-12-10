@@ -1,9 +1,11 @@
+import { useChatStore } from "@/store/chatStore";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function TabLayout() {
+  const unreadCount = useChatStore(state => state.getUnreadChatCount())
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: "black" }}
@@ -28,7 +30,7 @@ export default function TabLayout() {
 
             // use the EXACT names from <Tabs.Screen name="...">
             switch (route.name) {
-              case "chats":
+              case "Chats":
                 iconName = "chatbubbles";
                 break;
               case "Updates":
@@ -71,7 +73,7 @@ export default function TabLayout() {
                     />
 
                     {/* Chats badge */}
-                    {route.name === "chats" && (
+                    {route.name === "Chats" && (
                       <View
                         style={{
                           position: "absolute",
@@ -93,7 +95,7 @@ export default function TabLayout() {
                             fontWeight: "700",
                           }}
                         >
-                          2
+                          {unreadCount}
                         </Text>
                       </View>
                     )}
